@@ -1,11 +1,10 @@
 import discord
-from discord.ext import commands
-import requests
 import json
 import os
-from io import BytesIO
 from discord.ext import commands
-from discord import app_commands
+from datetime import datetime
+
+today_str = datetime.now().date().isoformat()
 
 from tmbd_api import get_tmdb_movie_poster
 from trakt_api import get_recent_activity
@@ -87,7 +86,7 @@ class RecentCog(commands.Cog):
                 inline=False
             )
 
-            binge_count = sum(1 for e in history if 'show' in e and e.get('watched_at', '').startswith(date))
+            binge_count = sum(1 for e in history if 'show' in e and e.get('watched_at', '').startswith(today_str))
             if binge_count > 1:
                 embed.set_footer(text=f"🔥 {binge_count} episodes watched today — binge mode!")
 

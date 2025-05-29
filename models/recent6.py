@@ -1,14 +1,11 @@
-import requests
 import discord
 from discord.ext import commands
 import os
 import json
-from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import aiohttp
 
 from tmbd_api import get_tmdb_movie_poster
-from trakt_api import get_recent_activity, get_full_history
+from trakt_api import get_full_history
 
 USER_DATA_FILE = "users.json"
 TRAKT_API_KEY = os.getenv("TRAKT_API_KEY")

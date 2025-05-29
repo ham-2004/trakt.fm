@@ -21,13 +21,6 @@ def get_recent_activity(username):
     response = requests.get(url, headers=headers)
     return response.json() if response.status_code == 200 else None
 
-def get_now_watching(username):
-    url = f"https://api.trakt.tv/users/{username}/watching"
-    response = requests.get(url, headers=HEADERS)
-    if response.status_code == 200:
-        return response.json()
-    return None
-
 def get_full_history(username, media_type=None):
     page = 1
     per_page = 100
@@ -51,7 +44,6 @@ def get_full_history(username, media_type=None):
             break  # No more pages
 
         all_history.extend(page_data)
-        print(f"Fetched page {page}, total items so far: {len(all_history)}")
         page += 1
 
     return all_history
