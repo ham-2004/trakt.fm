@@ -30,7 +30,7 @@ class RecentCog(commands.Cog):
         users = load_users()
         user_id = str(ctx.author.id)
         if user_id not in users:
-            await ctx.send("❌ Please register first using `trakt_register <username>`")
+            await ctx.send("❌ Please register first using `tset <username>`")
             return
 
         username = users[user_id]

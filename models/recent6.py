@@ -4,8 +4,9 @@ import os
 import json
 from io import BytesIO
 
-from tmbd_api import get_tmdb_movie_poster
+from tmbd_api import get_tmdb_movie_poster, get_tmdb_show_poster
 from trakt_api import get_full_history
+from utils.image_grid import create_titled_image_grid
 
 USER_DATA_FILE = "users.json"
 TRAKT_API_KEY = os.getenv("TRAKT_API_KEY")
@@ -32,7 +33,7 @@ class Recent6Cog(commands.Cog):
         user_id = str(ctx.author.id)
 
         if user_id not in users:
-            await ctx.send("❌ Please register first using `trakt_register <username>`")
+            await ctx.send("❌ Please register first using `tset <username>`")
             return
 
         username = users[user_id]
@@ -69,7 +70,7 @@ class Recent6Cog(commands.Cog):
             grid_data.append((poster_url, full_title))
 
         # Create grid image
-        image_bytes = await self.create_titled_image_grid(grid_data)
+        image_bytes = await create_titled_image_grid(grid_data)
 
         if not image_bytes:
             await ctx.send("❌ Failed to generate grid image.")
@@ -89,61 +90,88 @@ class Recent6Cog(commands.Cog):
         file = discord.File(image_bytes, filename="grid.webp")
         await ctx.send(embed=embed, file=file)
 
-    async def create_titled_image_grid(self, image_data):
-        from PIL import Image, ImageDraw, ImageFont
-        import aiohttp
 
-        POSTER_WIDTH = 200
-        POSTER_HEIGHT = 300
-        GRID_COLS = 3
-        GRID_ROWS = 2
+class Recent6CogShow(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-        grid = Image.new('RGB', (POSTER_WIDTH * GRID_COLS, POSTER_HEIGHT * GRID_ROWS), (0, 0, 0))
+    @commands.command(name="t6s")
+    async def trakt_six_recent(self, ctx):
+        """Show 6 recent shows in a grid image with overlaid titles"""
+        users = load_users()
+        user_id = str(ctx.author.id)
 
-        try:
-            font = ImageFont.truetype("arial.ttf", 16)
-        except:
-            font = ImageFont.load_default()
+        if user_id not in users:
+            await ctx.send("❌ Please register first using `tset <username>`")
+            return
 
-        async with aiohttp.ClientSession() as session:
-            for index, (url, title) in enumerate(image_data):
-                try:
-                    async with session.get(url) as resp:
-                        if resp.status == 200:
-                            img_data = await resp.read()
-                            img = Image.open(BytesIO(img_data)).convert("RGB")
-                        else:
-                            continue
-                except Exception:
-                    continue
+        username = users[user_id]
+        history = get_full_history(username)
 
-                img = img.resize((POSTER_WIDTH, POSTER_HEIGHT))
-                draw = ImageDraw.Draw(img)
+        if not history:
+            await ctx.send("❌ No recent activity found.")
+            return
 
-                # Background for text
-                draw.rectangle(
-                    [(0, POSTER_HEIGHT - 30), (POSTER_WIDTH, POSTER_HEIGHT)],
-                    fill=(0, 0, 0, 128)
-                )
+        # Gather up to 6 recent shows
+        seen_titles = set()
+        shows = []
 
-                draw.text(
-                    (10, POSTER_HEIGHT - 25),
-                    title,
-                    font=font,
-                    fill=(255, 255, 255),
-                    stroke_width=1,
-                    stroke_fill=(0, 0, 0)
-                )
+        for entry in history:
+            if 'show' in entry:
+                show = entry['show']
+                title = show.get('title')
+                year = show.get('year')
+                key = f"{title}_{year}"
 
-                x = (index % GRID_COLS) * POSTER_WIDTH
-                y = (index // GRID_COLS) * POSTER_HEIGHT
-                grid.paste(img, (x, y))
+                if key not in seen_titles:
+                    seen_titles.add(key)
+                    shows.append(show)
 
-        # Save grid to memory
-        buffer = BytesIO()
-        grid.save(buffer, format="WEBP")
-        buffer.seek(0)
-        return buffer
+                if len(shows) == 6:
+                    break
+
+        if not shows:
+            await ctx.send("❌ No recent shows found.")
+            return
+
+        # Prepare poster URLs and titles
+        grid_data = []
+        for show in shows:
+            title = show.get("title", "Unknown")
+            year = show.get("year", "Unknown")
+            full_title = f"{title} ({year})"
+            poster_url = show.get("images", {}).get("poster", [None])[0]
+
+            if not poster_url:
+                poster_url = get_tmdb_show_poster(title, year)
+            if not poster_url:
+                poster_url = FALLBACK_POSTER
+            elif not poster_url.startswith("http"):
+                poster_url = "https://" + poster_url
+
+            grid_data.append((poster_url, full_title))
+
+        # Create grid image
+        image_bytes = await create_titled_image_grid(grid_data)
+
+        if not image_bytes:
+            await ctx.send("❌ Failed to generate grid image.")
+            return
+
+        # Count total scrobbles
+        total_scrobbles = len(history)
+
+        embed = discord.Embed(
+            title=f"🎬 Recent Shows for {ctx.author.display_name}",
+            color=0x2F3136,
+            url=f"https://trakt.tv/users/{username}"
+        )
+        embed.set_image(url="attachment://grid.webp")
+        embed.set_footer(text=f"📊 Total scrobbles: {total_scrobbles}")
+
+        file = discord.File(image_bytes, filename="grid.webp")
+        await ctx.send(embed=embed, file=file)
 
 async def setup(bot):
     await bot.add_cog(Recent6Cog(bot))
+    await bot.add_cog(Recent6CogShow(bot))
