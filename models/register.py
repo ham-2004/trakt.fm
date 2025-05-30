@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import json
 import os
+from database.database import save_history_to_db
+from trakt_api import get_full_history
 
 USER_DATA_FILE = "users.json"
 
@@ -24,6 +26,15 @@ class RegisterCog(commands.Cog):
         users = load_users()
         users[str(ctx.author.id)] = username
         save_users(users)
+
+        await ctx.send(f"🔄 Fetching full history for `{username}`...")
+
+        shows = get_full_history(username, "shows")
+        movies = get_full_history(username, "movies")
+
+        save_history_to_db(username, shows, movies)
+
+        await ctx.send(f"✅ History saved for `{username}`!")
 
         embed = discord.Embed(
             title="✅ Trakt Account Linked",

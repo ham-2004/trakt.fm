@@ -4,8 +4,11 @@ from discord.ext import commands
 from discord import app_commands
 import asyncio
 from dotenv import load_dotenv
+from database.database import init_db
 
 load_dotenv()
+init_db()
+
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 PREFIX = os.getenv("BOT_PREFIX", "!")
@@ -23,7 +26,8 @@ initial_extensions = [
     "models.register",
     "models.recent",
     "models.help",
-    "models.recent6"
+    "models.recent6",
+    "models.watchlist",
 ]
 
 async def main():
