@@ -29,8 +29,18 @@ class RecentCog(commands.Cog):
     async def trakt_recent(self, ctx):
         users = load_users()
         user_id = str(ctx.author.id)
+
         if user_id not in users:
-            await ctx.send("❌ Please register first using `tset <username>`")
+            embed = discord.Embed(
+                title="📌 Trakt Account Not Registered",
+                description=(
+                    "You haven't linked your Trakt account yet.\n\n"
+                    "**Register:** Use `tset <username>` to link your account.\n"
+                    "**Need an account?** [Sign up here](https://trakt.tv/signup)"
+                ),
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
             return
 
         username = users[user_id]
