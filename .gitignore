@@ -2,3 +2,4 @@
 /.env
 /trakt_history.db
 /database/trakt_history.db
+.env
