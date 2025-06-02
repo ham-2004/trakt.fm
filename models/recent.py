@@ -96,7 +96,12 @@ class RecentCog(commands.Cog):
                 inline=False
             )
 
-            binge_count = sum(1 for e in history if 'show' in e and e.get('watched_at', '').startswith(today_str))
+            today = datetime.utcnow().date()
+            binge_count = sum(
+                1 for e in history
+                if 'show' in e and
+                datetime.fromisoformat(e.get('watched_at', '').replace('Z', '+00:00')).date() == today
+            )
             if binge_count > 1:
                 embed.set_footer(text=f"🔥 {binge_count} episodes watched today — binge mode!")
 
