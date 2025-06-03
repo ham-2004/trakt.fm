@@ -1,5 +1,5 @@
 /image_cache/
-/.env
 /trakt_history.db
 /database/trakt_history.db
 .env
+users.json
