@@ -1,52 +1,39 @@
 import discord
-import json
-import os
 from discord.ext import commands
 from datetime import datetime
 
-today_str = datetime.now().date().isoformat()
-
-from tmbd_api import get_tmdb_movie_poster
-from trakt_api import get_recent_activity
-
-USER_DATA_FILE = "users.json"
-TRAKT_API_KEY = os.getenv("TRAKT_API_KEY")
-TMDB_API_KEY = os.getenv("TMDB_API_KEY")
-FALLBACK_POSTER = "https://i.imgur.com/Z2MYNbj.png"
-IMAGE_CACHE_DIR = "image_cache"
-
-def load_users():
-    if not os.path.exists(USER_DATA_FILE):
-        return {}
-    with open(USER_DATA_FILE, "r") as f:
-        return json.load(f)
+from config import TRAKT_API_KEY, FALLBACK_POSTER, IMAGE_CACHE_DIR
+from utils.embeds import error_embed
+from api.tmbd_api import get_tmdb_movie_poster
+from api.trakt_api import get_recent_activity
+from database.database import get_user
 
 class RecentCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="tr")
+    # 2. Renamed back to "tr" since this code only fetches 1 item, not 6
+    @commands.hybrid_command(name="tr", description="Show your most recently watched item")
     async def trakt_recent(self, ctx):
-        users = load_users()
-        user_id = str(ctx.author.id)
 
-        if user_id not in users:
-            embed = discord.Embed(
-                title="📌 Trakt Account Not Registered",
+        # 3. Clean database lookup
+        username = get_user(ctx.author.id)
+
+        if not username:
+            # 4. Using our new standardized error embed!
+            await ctx.send(embed=error_embed(
+                title="Trakt Account Not Registered",
                 description=(
                     "You haven't linked your Trakt account yet.\n\n"
-                    "**Register:** Use `tset <username>` to link your account.\n"
+                    "**Register:** Use `/tset <username>` to link your account.\n"
                     "**Need an account?** [Sign up here](https://trakt.tv/signup)"
-                ),
-                color=discord.Color.red()
-            )
-            await ctx.send(embed=embed)
+                )
+            ))
             return
 
-        username = users[user_id]
-        history = get_recent_activity(username)
+        history = await get_recent_activity(username)
         if not history:
-            await ctx.send("❌ No recent activity found.")
+            await ctx.send(embed=error_embed("No recent activity found."))
             return
 
         first_entry = history[0]
@@ -59,6 +46,7 @@ class RecentCog(commands.Cog):
         if not poster_url:
             title = item.get('title', 'Unknown')
             year = item.get('year', 'Unknown')
+            # Warning: If you update tmbd_api.py to be async, remember to add 'await' here!
             poster_url = get_tmdb_movie_poster(title, year)
 
         # fallback to static image if all else fails
@@ -78,6 +66,7 @@ class RecentCog(commands.Cog):
             url=f"https://trakt.tv/users/{username}",
             color=0x1DB954
         )
+
         if is_movie:
             embed.add_field(
                 name=f"{title} ({year})",
