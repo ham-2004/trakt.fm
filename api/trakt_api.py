@@ -12,7 +12,8 @@ HEADERS = {
 }
 
 async def get_recent_activity(username):
-    url = f"https://api.trakt.tv/users/{username}/history?extended=images"
+    # Changed from ?extended=images to ?extended=full
+    url = f"https://api.trakt.tv/users/{username}/history?extended=full"
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=HEADERS) as response:
             return await response.json() if response.status == 200 else None
@@ -47,7 +48,8 @@ async def get_full_history(username, media_type=None):
     return all_history
 
 async def get_trakt_watchlist(username):
-    url = f"https://api.trakt.tv/users/{username}/watchlist?extended=images"
+    # Changed from ?extended=images to ?extended=full
+    url = f"https://api.trakt.tv/users/{username}/watchlist?extended=full"
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=HEADERS) as response:
             return await response.json() if response.status == 200 else None
@@ -121,3 +123,30 @@ async def get_trakt_profile(username):
         except Exception as e:
             print(f"⚠️ Trakt API Error (Profile): {e}")
             return None
+
+
+async def get_trending_trakt(limit=5):
+    """Fetches the top trending movies and shows from Trakt, merged and sorted by watchers."""
+    movies_url = f"https://api.trakt.tv/movies/trending?limit={limit}"
+    shows_url = f"https://api.trakt.tv/shows/trending?limit={limit}"
+
+    combined = []
+
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(movies_url, headers=HEADERS) as response:
+                if response.status == 200:
+                    combined.extend(await response.json())
+        except Exception as e:
+            print(f"⚠️ Trakt API Error (Trending Movies): {e}")
+
+        try:
+            async with session.get(shows_url, headers=HEADERS) as response:
+                if response.status == 200:
+                    combined.extend(await response.json())
+        except Exception as e:
+            print(f"⚠️ Trakt API Error (Trending Shows): {e}")
+
+    # Sort by watcher count descending and return the top `limit` items
+    combined.sort(key=lambda x: x.get("watchers", 0), reverse=True)
+    return combined[:limit] if combined else None

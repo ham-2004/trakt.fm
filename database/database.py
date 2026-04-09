@@ -64,6 +64,14 @@ def get_user(discord_id):
     conn.close()
     return result[0] if result else None
 
+def delete_user(discord_id):
+    """Removes a user's Trakt link from the database."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM users WHERE discord_id = ?', (str(discord_id),))
+    conn.commit()
+    conn.close()
+
 def save_history_to_db(username, shows, movies):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()

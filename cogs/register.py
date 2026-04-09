@@ -4,7 +4,7 @@ import aiohttp  # Upgraded from 'requests'
 
 # Centralized imports
 from config import TRAKT_API_KEY
-from database.database import save_history_to_db, save_user
+from database.database import save_history_to_db, save_user, get_user, delete_user
 from api.trakt_api import get_full_history
 from utils.embeds import error_embed, success_embed, loading_embed
 from discord import app_commands
@@ -37,6 +37,7 @@ class RegisterCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def trakt_register(self, ctx, username: str):
+        await ctx.defer()
         # We must 'await' the newly async check
         if not await trakt_user_exists(username):
             await ctx.send(embed=error_embed(
@@ -64,6 +65,29 @@ class RegisterCog(commands.Cog):
             title="Trakt Account Linked",
             description=f"[**{username}**](https://trakt.tv/users/{username}) has been linked to {ctx.author.mention} and history is saved!"
         ))
+
+    @commands.hybrid_command(name="unlink", description="Unlink your Trakt account from the bot")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def unlink(self, ctx):
+        username = get_user(ctx.author.id)
+
+        if not username:
+            return await ctx.send(
+                embed=error_embed("You don't have a Trakt account linked. Nothing to unlink!")
+            )
+
+        # Delete the mapping from the SQLite database
+        delete_user(ctx.author.id)
+
+        await ctx.send(
+            embed=success_embed(
+                f"Your Trakt account **{username}** has been unlinked.\n"
+                f"You can re-link anytime with `/tset <username>`.",
+                title="Account Unlinked"
+            )
+        )
 
 
 async def setup(bot):
