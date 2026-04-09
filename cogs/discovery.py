@@ -145,42 +145,35 @@ class DiscoveryCog(commands.Cog):
                 color=0x9B59B6  # Purple for rivalry
             )
 
-            # Author column
+            # Author column (Compact for mobile)
             embed.add_field(
-                name=f"🎬 {ctx.author.display_name}",
+                name=f"👤 {ctx.author.display_name}",
                 value=(
-                    f"**Movies:** {a_movies:,}\n"
-                    f"**Shows:** {a_shows:,}\n"
-                    f"**Episodes:** {a_eps:,}\n"
-                    f"**Watch Time:** {a_days:,} days"
+                    f"🎬 **Movies:** {a_movies:,}\n"
+                    f"📺 **Shows:** {a_shows:,}\n"
+                    f"▶️ **Eps:** {a_eps:,}\n"
+                    f"⌛ **Time:** {a_days:,}d"
                 ),
                 inline=True
             )
 
-            # VS column
+            # Target column (Compact for mobile)
             embed.add_field(
-                name="⚡",
-                value="vs\nvs\nvs\nvs",
-                inline=True
-            )
-
-            # Target column
-            embed.add_field(
-                name=f"🎬 {target.display_name}",
+                name=f"👤 {target.display_name}",
                 value=(
-                    f"**Movies:** {t_movies:,}\n"
-                    f"**Shows:** {t_shows:,}\n"
-                    f"**Episodes:** {t_eps:,}\n"
-                    f"**Watch Time:** {t_days:,} days"
+                    f"🎬 **Movies:** {t_movies:,}\n"
+                    f"📺 **Shows:** {t_shows:,}\n"
+                    f"▶️ **Eps:** {t_eps:,}\n"
+                    f"⌛ **Time:** {t_days:,}d"
                 ),
                 inline=True
             )
 
             # Winner callout
             if a_days > t_days:
-                verdict = f"👑 **{ctx.author.display_name}** leads with **{a_days - t_days:.1f}** more days watched!"
+                verdict = f"👑 **{ctx.author.display_name}** leads by **{a_days - t_days:.1f}** days!"
             elif t_days > a_days:
-                verdict = f"👑 **{target.display_name}** leads with **{t_days - a_days:.1f}** more days watched!"
+                verdict = f"👑 **{target.display_name}** leads by **{t_days - a_days:.1f}** days!"
             else:
                 verdict = "🤝 It's a perfect tie! You're both equally addicted."
 
