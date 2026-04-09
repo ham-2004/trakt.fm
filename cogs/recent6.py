@@ -1,12 +1,10 @@
 import discord
 from discord.ext import commands
 
-# 1. Cleaned up imports
 from config import FALLBACK_POSTER
 from utils.embeds import error_embed, loading_embed
 from database.database import get_user, count_total_scrobbles
 
-# Make sure these are being imported from your correct files!
 from api.tmbd_api import get_tmdb_movie_poster, get_tmdb_show_poster
 from api.trakt_api import get_recent_history
 from utils.image_grid import create_titled_image_grid
@@ -17,7 +15,6 @@ class Recent6Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 2. Converted to Hybrid Command & applied Cooldown
     @commands.hybrid_command(name="t6", description="Show 6 recent movies in a grid image")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
@@ -36,7 +33,6 @@ class Recent6Cog(commands.Cog):
             ))
             return
 
-        # 3. Send a loading message (Image grids take a few seconds to build!)
         loading_msg = await ctx.send(embed=loading_embed("Fetching movies and generating grid..."))
 
         history = await get_recent_history(username, media_type="movies", per_page=100)
@@ -45,14 +41,12 @@ class Recent6Cog(commands.Cog):
             await loading_msg.edit(embed=error_embed("No recent activity found."))
             return
 
-        # Gather up to 6 recent movies
         movies = [entry for entry in history if 'movie' in entry][:6]
 
         if not movies:
             await loading_msg.edit(embed=error_embed("No recent movies found."))
             return
 
-        # Prepare poster URLs and titles
         grid_data = []
         for entry in movies:
             item = entry["movie"]
@@ -62,7 +56,6 @@ class Recent6Cog(commands.Cog):
             poster_url = item.get("images", {}).get("poster", [None])[0]
 
             if not poster_url:
-                # 4. Awaiting TMDB if you've updated it to async!
                 poster_url = await get_tmdb_movie_poster(title, year)
 
             if not poster_url:
@@ -93,7 +86,6 @@ class Recent6Cog(commands.Cog):
 
         file = discord.File(image_bytes, filename="grid.webp")
 
-        # 5. Delete the loading message and send the real grid!
         await loading_msg.delete()
         await ctx.send(embed=embed, file=file)
 
@@ -102,14 +94,12 @@ class Recent6CogShow(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 6. Converted to Hybrid Command & applied Cooldown
     @commands.hybrid_command(name="t6s", description="Show 6 recent shows in a grid image")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def trakt_six_recent_shows(self, ctx):
 
-        # 7. Replaced load_users() JSON logic with the new database logic
         username = get_user(ctx.author.id)
 
         if not username:
@@ -132,7 +122,6 @@ class Recent6CogShow(commands.Cog):
             await loading_msg.edit(embed=error_embed("No recent activity found."))
             return
 
-        # Gather up to 6 recent shows
         seen_titles = set()
         shows = []
 

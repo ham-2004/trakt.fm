@@ -15,7 +15,6 @@ class RecentCog(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="tr", description="Show your recent Trakt activity")
-    # 2. Replaced the dictionary with the correct discord.py decorators!
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(1, 10, commands.BucketType.user)

@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-
+from typing import Literal, Optional  # <-- Required for the sync command!
 
 class AdminCog(commands.Cog):
     def __init__(self, bot):
@@ -26,6 +26,45 @@ class AdminCog(commands.Cog):
 
         except Exception as e:
             await ctx.send(f"❌ Failed to reload `{extension}`: ```py\n{e}```")
+
+    @commands.command(name="sync", hidden=True)
+    @commands.guild_only()
+    @commands.is_owner()
+    async def sync(
+        self,
+        ctx: commands.Context,
+        guilds: commands.Greedy[discord.Object],
+        spec: Optional[Literal["~", "*", "^"]] = None
+    ) -> None:
+        """Syncs the slash command tree."""
+        if not guilds:
+            if spec == "~":
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "*":
+                ctx.bot.tree.copy_global_to(guild=ctx.guild)
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "^":
+                ctx.bot.tree.clear_commands(guild=ctx.guild)
+                await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = []
+            else:
+                synced = await ctx.bot.tree.sync()
+
+            await ctx.send(
+                f"✅ Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
+            )
+            return
+
+        ret = 0
+        for guild in guilds:
+            try:
+                await ctx.bot.tree.sync(guild=guild)
+            except discord.HTTPException:
+                pass
+            else:
+                ret += 1
+
+        await ctx.send(f"✅ Synced the tree to {ret}/{len(guilds)} servers.")
 
 
 async def setup(bot):
