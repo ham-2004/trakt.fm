@@ -32,7 +32,7 @@ class RegisterCog(commands.Cog):
 
     # Converted to Hybrid Command
     @commands.hybrid_command(name="tset", description="Link your Trakt.tv account to the bot")
-    @commands.cooldown(1, 60, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def trakt_register(self, ctx, username: str):
         # We must 'await' the newly async check
         if not await trakt_user_exists(username):

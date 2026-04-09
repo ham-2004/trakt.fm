@@ -3,3 +3,4 @@
 /database/trakt_history.db
 .env
 users.json
+.venv
