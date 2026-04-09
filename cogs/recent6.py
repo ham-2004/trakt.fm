@@ -10,6 +10,7 @@ from database.database import get_user, count_total_scrobbles
 from api.tmbd_api import get_tmdb_movie_poster, get_tmdb_show_poster
 from api.trakt_api import get_recent_history
 from utils.image_grid import create_titled_image_grid
+from discord import app_commands
 
 
 class Recent6Cog(commands.Cog):
@@ -18,6 +19,8 @@ class Recent6Cog(commands.Cog):
 
     # 2. Converted to Hybrid Command & applied Cooldown
     @commands.hybrid_command(name="t6", description="Show 6 recent movies in a grid image")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def trakt_six_recent(self, ctx):
         username = get_user(ctx.author.id)
@@ -101,6 +104,8 @@ class Recent6CogShow(commands.Cog):
 
     # 6. Converted to Hybrid Command & applied Cooldown
     @commands.hybrid_command(name="t6s", description="Show 6 recent shows in a grid image")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def trakt_six_recent_shows(self, ctx):
 

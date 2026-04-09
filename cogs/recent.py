@@ -1,26 +1,29 @@
 import discord
 from discord.ext import commands
-from datetime import datetime
+from discord import app_commands  # <-- 1. Added the correct import!
+from datetime import datetime, timezone
 
 from config import TRAKT_API_KEY, FALLBACK_POSTER, IMAGE_CACHE_DIR
 from utils.embeds import error_embed
-from api.tmbd_api import get_tmdb_movie_poster
+from api.tmbd_api import get_tmdb_movie_poster, get_tmdb_show_poster
 from api.trakt_api import get_recent_activity
 from database.database import get_user
+
 
 class RecentCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 2. Renamed back to "tr" since this code only fetches 1 item, not 6
-    @commands.hybrid_command(name="tr", description="Show your most recently watched item")
+    @commands.hybrid_command(name="tr", description="Show your recent Trakt activity")
+    # 2. Replaced the dictionary with the correct discord.py decorators!
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def trakt_recent(self, ctx):
 
-        # 3. Clean database lookup
         username = get_user(ctx.author.id)
 
         if not username:
-            # 4. Using our new standardized error embed!
             await ctx.send(embed=error_embed(
                 title="Trakt Account Not Registered",
                 description=(
@@ -42,18 +45,18 @@ class RecentCog(commands.Cog):
         images = item.get('images', {})
         poster_url = images.get("poster", [None])[0]
 
-        # fallback to TMDb if Trakt doesn't return one
         if not poster_url:
             title = item.get('title', 'Unknown')
             year = item.get('year', 'Unknown')
-            # Warning: If you update tmbd_api.py to be async, remember to add 'await' here!
-            poster_url = get_tmdb_movie_poster(title, year)
 
-        # fallback to static image if all else fails
+            if is_movie:
+                poster_url = await get_tmdb_movie_poster(title, year)
+            else:
+                poster_url = await get_tmdb_show_poster(title, year)
+
         if not poster_url:
             poster_url = FALLBACK_POSTER
         else:
-            # Ensure full URL format
             if not poster_url.startswith("http"):
                 poster_url = "https://" + poster_url
 
@@ -64,7 +67,7 @@ class RecentCog(commands.Cog):
         embed = discord.Embed(
             title=f"📽️ Recent activity by {ctx.author.display_name}",
             url=f"https://trakt.tv/users/{username}",
-            color=0x1DB954
+            color=0xED1C24
         )
 
         if is_movie:
@@ -85,7 +88,7 @@ class RecentCog(commands.Cog):
                 inline=False
             )
 
-            today = datetime.utcnow().date()
+            today = datetime.now(timezone.utc).date()
             binge_count = sum(
                 1 for e in history
                 if 'show' in e and

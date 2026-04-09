@@ -4,3 +4,4 @@
 .env
 users.json
 .venv
+/bot.log

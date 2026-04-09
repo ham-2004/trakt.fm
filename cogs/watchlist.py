@@ -7,6 +7,7 @@ from utils.embeds import error_embed, loading_embed
 from database.database import get_user
 from api.trakt_api import get_trakt_watchlist
 from api.tmbd_api import get_tmdb_movie_poster, get_tmdb_show_poster
+from discord import app_commands
 
 
 class WatchlistView(discord.ui.View):
@@ -120,6 +121,8 @@ class WatchlistCog(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="tw", description="Show your interactive Trakt watchlist")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def trakt_watchlist(self, ctx):
         username = get_user(ctx.author.id)

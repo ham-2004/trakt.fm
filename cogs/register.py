@@ -7,6 +7,7 @@ from config import TRAKT_API_KEY
 from database.database import save_history_to_db, save_user
 from api.trakt_api import get_full_history
 from utils.embeds import error_embed, success_embed, loading_embed
+from discord import app_commands
 
 
 # Upgraded to async so it doesn't freeze your bot!
@@ -32,6 +33,8 @@ class RegisterCog(commands.Cog):
 
     # Converted to Hybrid Command
     @commands.hybrid_command(name="tset", description="Link your Trakt.tv account to the bot")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def trakt_register(self, ctx, username: str):
         # We must 'await' the newly async check
