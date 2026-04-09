@@ -15,3 +15,16 @@
 2026-04-09 12:36:38,679 [INFO] discord.gateway: Shard ID None has connected to Gateway (Session ID: 95780bf353d34930412b0be3248fc588).
 2026-04-09 12:36:40,992 [INFO] trakt.fm: ✅ Bot is online: trakt.fm
 2026-04-09 12:36:41,509 [INFO] trakt.fm: 🔄 Synced 8 slash command(s)
+2026-04-09 12:54:07,804 [WARNING] discord.client: PyNaCl is not installed, voice will NOT be supported
+2026-04-09 12:54:07,804 [WARNING] discord.client: davey is not installed, voice will NOT be supported
+2026-04-09 12:54:07,818 [INFO] trakt.fm: 🧩 Loaded extension: cogs.admin
+2026-04-09 12:54:07,818 [INFO] trakt.fm: 🧩 Loaded extension: cogs.help
+2026-04-09 12:54:07,821 [INFO] trakt.fm: 🧩 Loaded extension: cogs.recent
+2026-04-09 12:54:07,837 [INFO] trakt.fm: 🧩 Loaded extension: cogs.recent6
+2026-04-09 12:54:07,837 [INFO] trakt.fm: 🧩 Loaded extension: cogs.register
+2026-04-09 12:54:07,838 [INFO] trakt.fm: 🧩 Loaded extension: cogs.social
+2026-04-09 12:54:07,839 [INFO] trakt.fm: 🧩 Loaded extension: cogs.watchlist
+2026-04-09 12:54:07,839 [INFO] discord.client: logging in using static token
+2026-04-09 12:54:11,592 [INFO] discord.gateway: Shard ID None has connected to Gateway (Session ID: 5c081a2dfe73bad8ce9c6ec5cc9707b0).
+2026-04-09 12:54:13,921 [INFO] trakt.fm: ✅ Bot is online: trakt.fm
+2026-04-09 12:54:14,457 [INFO] trakt.fm: 🔄 Synced 8 slash command(s)
