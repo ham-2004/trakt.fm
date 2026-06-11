@@ -122,12 +122,12 @@ class SocialCog(commands.Cog):
         location = ctx.guild.name if ctx.guild else "Global"
 
         embed = discord.Embed(
-            title=f"🏆 {location} Watch Leaderboard",
+            title=f"{location} Watch Leaderboard",
             description="Top users ranked by total watched items.",
             color=discord.Color.gold()
         )
 
-        medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+        medals = ["🥇", "🥈", "🥉", "4.", "5.", "6.", "7.", "8.", "9.", "10."]
 
         for index, row in enumerate(top_users):
             discord_id, username, movies, shows = row

@@ -10,9 +10,30 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             discord_id TEXT PRIMARY KEY,
-            trakt_username TEXT NOT NULL
+            trakt_username TEXT,
+            letterboxd_username TEXT
         )
     ''')
+
+    # Migrate pre-Letterboxd databases: the old schema had trakt_username NOT NULL
+    # and no letterboxd_username column. SQLite can't drop NOT NULL via ALTER,
+    # so rebuild the table once.
+    cursor.execute("PRAGMA table_info(users)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "letterboxd_username" not in columns:
+        cursor.execute("ALTER TABLE users RENAME TO users_old")
+        cursor.execute('''
+            CREATE TABLE users (
+                discord_id TEXT PRIMARY KEY,
+                trakt_username TEXT,
+                letterboxd_username TEXT
+            )
+        ''')
+        cursor.execute('''
+            INSERT INTO users (discord_id, trakt_username)
+            SELECT discord_id, trakt_username FROM users_old
+        ''')
+        cursor.execute("DROP TABLE users_old")
 
     # Create table for shows
     cursor.execute('''
@@ -48,9 +69,12 @@ def save_user(discord_id, trakt_username):
     """Saves or updates a user's Trakt username"""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    # Upsert instead of INSERT OR REPLACE: REPLACE deletes the row first,
+    # which would wipe the letterboxd_username column.
     cursor.execute('''
-        INSERT OR REPLACE INTO users (discord_id, trakt_username)
+        INSERT INTO users (discord_id, trakt_username)
         VALUES (?, ?)
+        ON CONFLICT(discord_id) DO UPDATE SET trakt_username = excluded.trakt_username
     ''', (str(discord_id), trakt_username))
     conn.commit()
     conn.close()
@@ -65,10 +89,47 @@ def get_user(discord_id):
     return result[0] if result else None
 
 def delete_user(discord_id):
-    """Removes a user's Trakt link from the database."""
+    """Removes a user's Trakt link, keeping the row if Letterboxd is still linked."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute('DELETE FROM users WHERE discord_id = ?', (str(discord_id),))
+    cursor.execute('UPDATE users SET trakt_username = NULL WHERE discord_id = ?', (str(discord_id),))
+    cursor.execute('''
+        DELETE FROM users
+        WHERE discord_id = ? AND trakt_username IS NULL AND letterboxd_username IS NULL
+    ''', (str(discord_id),))
+    conn.commit()
+    conn.close()
+
+def save_letterboxd_user(discord_id, letterboxd_username):
+    """Saves or updates a user's Letterboxd username"""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO users (discord_id, letterboxd_username)
+        VALUES (?, ?)
+        ON CONFLICT(discord_id) DO UPDATE SET letterboxd_username = excluded.letterboxd_username
+    ''', (str(discord_id), letterboxd_username))
+    conn.commit()
+    conn.close()
+
+def get_letterboxd_user(discord_id):
+    """Fetches a Letterboxd username by Discord ID"""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('SELECT letterboxd_username FROM users WHERE discord_id = ?', (str(discord_id),))
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else None
+
+def delete_letterboxd_user(discord_id):
+    """Removes a user's Letterboxd link, keeping the row if Trakt is still linked."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('UPDATE users SET letterboxd_username = NULL WHERE discord_id = ?', (str(discord_id),))
+    cursor.execute('''
+        DELETE FROM users
+        WHERE discord_id = ? AND trakt_username IS NULL AND letterboxd_username IS NULL
+    ''', (str(discord_id),))
     conn.commit()
     conn.close()
 
@@ -140,6 +201,7 @@ def get_leaderboard(limit=10):
                (SELECT COUNT(*) FROM movies m WHERE m.username = u.trakt_username) as movie_count,
                (SELECT COUNT(*) FROM shows s WHERE s.username = u.trakt_username) as show_count
         FROM users u
+        WHERE u.trakt_username IS NOT NULL
         ORDER BY (movie_count + show_count) DESC
         LIMIT ?
     ''', (limit,))

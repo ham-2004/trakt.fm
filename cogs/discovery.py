@@ -149,10 +149,10 @@ class DiscoveryCog(commands.Cog):
             embed.add_field(
                 name=f"👤 {ctx.author.display_name}",
                 value=(
-                    f"🎬 **Movies:** {a_movies:,}\n"
-                    f"📺 **Shows:** {a_shows:,}\n"
-                    f"▶️ **Eps:** {a_eps:,}\n"
-                    f"⌛ **Time:** {a_days:,}d"
+                    f"**Movies:** {a_movies:,}\n"
+                    f"**Shows:** {a_shows:,}\n"
+                    f"**Eps:** {a_eps:,}\n"
+                    f"**Time:** {a_days:,}d"
                 ),
                 inline=True
             )
@@ -161,10 +161,10 @@ class DiscoveryCog(commands.Cog):
             embed.add_field(
                 name=f"👤 {target.display_name}",
                 value=(
-                    f"🎬 **Movies:** {t_movies:,}\n"
-                    f"📺 **Shows:** {t_shows:,}\n"
-                    f"▶️ **Eps:** {t_eps:,}\n"
-                    f"⌛ **Time:** {t_days:,}d"
+                    f"**Movies:** {t_movies:,}\n"
+                    f"**Shows:** {t_shows:,}\n"
+                    f"**Eps:** {t_eps:,}\n"
+                    f"**Time:** {t_days:,}d"
                 ),
                 inline=True
             )
@@ -210,12 +210,12 @@ class DiscoveryCog(commands.Cog):
                 )
 
             embed = discord.Embed(
-                title="🔥 Trending on Trakt",
-                description="The hottest movies & shows people are watching right now.\n━━━━━━━━━━━━━━━━━━━━",
+                title="Trending on Trakt",
+                description="Movies & Shows people are watching right now.\n━━━━━━━━━━━━━━━━━━━━",
                 color=0xED1C24  # Trakt red
             )
 
-            medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+            medals = ["1.", "2.", "3.", "4.", "5."]
 
             for index, item in enumerate(trending_items[:5]):
                 # Trending endpoint may return 'movie' or 'show' as the type
@@ -234,8 +234,8 @@ class DiscoveryCog(commands.Cog):
                 year = media.get("year", "?")
 
                 embed.add_field(
-                    name=f"{medals[index]} {kind} {title} ({year})",
-                    value=f"👀 **{watchers:,}** people watching now",
+                    name=f"{medals[index]} {title} ({year}  {kind})",
+                    value=f"**{watchers:,}** people watching now",
                     inline=False
                 )
 

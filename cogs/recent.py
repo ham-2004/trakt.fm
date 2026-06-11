@@ -61,7 +61,14 @@ class RecentCog(commands.Cog):
 
         title = item.get('title', 'Unknown')
         year = item.get('year', 'Unknown')
-        date = first_entry.get('watched_at', '').split('T')[0]
+
+        raw_date = first_entry.get('watched_at', '')
+        if raw_date:
+            dt = datetime.fromisoformat(raw_date.replace('Z', '+00:00'))
+            unix_time = int(dt.timestamp())
+            date = f"<t:{unix_time}:f>"
+        else:
+            date = "Unknown"
 
         embed = discord.Embed(
             title=f"📽️ Recent activity by {ctx.author.display_name}",
@@ -83,7 +90,7 @@ class RecentCog(commands.Cog):
 
             embed.add_field(
                 name=f"{title} ({year})",
-                value=f"🎞️ {ep_title} — S{season:02}E{number:02}\n📅 Watched on {date}",
+                value=f"🎞️ {ep_title} — S{season:02}E{number:02}\n Watched on {date}",
                 inline=False
             )
 
